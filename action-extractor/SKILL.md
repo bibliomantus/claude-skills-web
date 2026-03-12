@@ -132,6 +132,7 @@ Every step must contain exactly three parts:
 - If contradictions exist — present both options, mark which is safer for a beginner
 - Do NOT add recommendations not in the source material
 - Do NOT start with an overview or explanation of why this skill matters
+- **Prompts must stay in their original language.** When the source material contains prompts or instructions for AI tools (ChatGPT, Midjourney, Kling, etc.), keep them in the original language (usually English). Add a Russian translation in parentheses or on the next line, but the working prompt must remain in the original — translating it would break its functionality
 
 ### 8. Beginner Traps
 
