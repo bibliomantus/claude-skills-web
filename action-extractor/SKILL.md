@@ -1,5 +1,5 @@
 ---
-name: action-extractor
+name: action-extractor-web
 description: >
   Analyze any text material (video transcript, article, book excerpt, audio transcript,
   lecture notes) and create an exhaustive step-by-step practical guide for implementing
@@ -87,6 +87,17 @@ Read the entire material carefully. Identify:
 - **Tools, platforms, software** mentioned
 - **Prerequisites** — knowledge, skills, or tools mentioned but NOT explained in the material
 - **Irrelevant sections** — digressions, ads, self-promotion, filler — skip silently
+
+#### Fix garbled names from transcripts
+
+Auto-generated transcripts consistently misspell proper names of tools, services, people, and companies — speech-to-text writes what it "hears", not what's correct. Before writing the guide, identify every proper name in the material and resolve it to its official spelling.
+
+How to resolve:
+1. Use context clues: if the transcript says "cling" but the topic is AI video generation — the correct name is **Kling AI**
+2. For well-known tools, use their official capitalization and spelling: **ChatGPT** (not "chat GBT", "chat GPT", "Chad GPT"), **Midjourney** (not "mid journey", "mid Journey"), **Kling AI** (not "Cling", "Kling"), **Suno** (not "Soono"), **DALL·E** (not "Dolly", "dall e"), **Runway** (not "run way"), etc.
+3. If the user provided a source link or author info, use that to verify names
+
+In the guide, always use the official name on first mention. If the service has a well-known URL, include it in parentheses on first mention: e.g., "Kling AI (app.klingai.com)".
 
 ### 4. Identify Prerequisites
 
@@ -203,6 +214,7 @@ Before outputting, verify:
 - [ ] Beginner traps cover real risks from the material?
 - [ ] Resource list includes all mentioned tools/services?
 - [ ] Checklist matches all steps from the full guide?
+- [ ] All tool/service/platform names use official spelling (no transcript garbling)?
 
 If any item fails — fix before outputting.
 
