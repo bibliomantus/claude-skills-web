@@ -115,7 +115,56 @@ Order all steps by how quickly they produce a tangible result:
 2. **Core skills** — more time, but form the competency foundation
 3. **Advanced level** — long-term deepening of expertise
 
-### 6. Format Each Step
+### 6. Extract Timestamps (video transcripts only)
+
+If the source material is a **video transcript** with timestamps (SRT or timestamped text), extract timestamps for key moments during analysis. This step only applies when timestamps are present in the source material.
+
+**What gets a timestamp:**
+1. **Step headers** (top level `### Шаг N:`) — the moment in the video where the speaker begins discussing this topic
+2. **Concrete examples / speaker experiences** — when the speaker shares a real case, demo, or personal story that illustrates the step. These are placed inside a blockquote within the step
+3. **Critical warnings** — when the speaker emphatically warns against something and the emotional emphasis matters (tone is lost in text)
+
+**What does NOT get a timestamp:**
+- Substeps within a step
+- General/abstract statements ("AI is changing the world")
+- Articles, books, text materials without timestamps
+- Filler, introductions, self-promotion segments
+
+**How to find the right timestamp:**
+- Match the content of each step/example back to the transcript
+- Use the timestamp where the speaker **starts** discussing the topic (not the middle or end)
+- For SRT format: use the start time of the subtitle block containing the key phrase
+- For timestamped text: use the timestamp on or immediately before the relevant line
+- Round to whole seconds (drop milliseconds)
+
+**Format — step headers:**
+If the user provided a YouTube URL or video link:
+```markdown
+### Шаг 3: Настрой параметры генерации [⏱ 12:34](https://youtu.be/VIDEO_ID?t=754)
+```
+
+If no video URL is available — use time only, without a link:
+```markdown
+### Шаг 3: Настрой параметры генерации [⏱ 12:34]
+```
+
+**Format — speaker examples (blockquote inside the step):**
+```markdown
+> 💡 **Пример спикера** [⏱ 15:20](https://youtu.be/VIDEO_ID?t=920): Автор показывает, как он сгенерировал 3 варианта обложки за 2 минуты, используя seed-параметр для контроля стиля.
+```
+
+**Format — critical warnings (blockquote inside the step):**
+```markdown
+> ⚠️ **Предупреждение спикера** [⏱ 22:05](https://youtu.be/VIDEO_ID?t=1325): "Никогда не используйте этот параметр выше 0.8 — я потерял неделю работы из-за этого."
+```
+
+**URL construction:**
+- Use short YouTube URL format: `https://youtu.be/VIDEO_ID?t=SECONDS`
+- Convert timestamp to total seconds: `12:34` → `754` (12×60+34), `1:05:20` → `3920` (1×3600+5×60+20)
+
+**Important:** Do NOT fabricate timestamps. Every timestamp must be traced back to a specific location in the source transcript. If you cannot confidently identify the right moment — omit the timestamp for that element rather than guess.
+
+### 7. Format Each Step (with timestamps if available)
 
 Every step must contain exactly three parts:
 
@@ -123,7 +172,7 @@ Every step must contain exactly three parts:
 2. **How to execute** — specific substeps, detailed enough for someone unfamiliar with the topic to complete without questions
 3. **Completion criterion** — a specific example, number, or fact confirming the step is done
 
-### 7. Apply Rules
+### 8. Apply Rules
 
 - The guide is ALWAYS in Russian, regardless of source material language
 - Zero gap between instruction and action — no theory, backstory, or introductions
@@ -134,7 +183,7 @@ Every step must contain exactly three parts:
 - Do NOT start with an overview or explanation of why this skill matters
 - **Prompts must stay in their original language.** When the source material contains prompts or instructions for AI tools (ChatGPT, Midjourney, Kling, etc.), keep them in the original language (usually English). Add a Russian translation in parentheses or on the next line, but the working prompt must remain in the original — translating it would break its functionality
 
-### 8. Beginner Traps
+### 9. Beginner Traps
 
 Go through the steps again and find where a beginner will likely get stuck:
 - Warnings the author mentions in passing
@@ -150,7 +199,7 @@ Format:
 
 Only include traps that follow from the material. Do not invent unrelated problems.
 
-### 9. Context Adaptation
+### 10. Context Adaptation
 
 If the material is tied to a specific context (company size, industry, budget), add:
 
@@ -169,7 +218,7 @@ If the material is tied to a specific context (company size, industry, budget), 
 
 Only include contexts that make sense. 2-4 bullets per context.
 
-### 10. Resource List
+### 11. Resource List
 
 Collect ALL tools, services, platforms, books, channels from the material:
 
@@ -183,7 +232,7 @@ Collect ALL tools, services, platforms, books, channels from the material:
 
 Do NOT add resources not mentioned in the material.
 
-### 11. Compact Checklist
+### 12. Compact Checklist
 
 Add a 1-page checklist version at the end:
 
@@ -205,7 +254,7 @@ Add a 1-page checklist version at the end:
 
 Rules: each step = 1 line, max 10-15 words, no substeps, same order as full guide.
 
-### 12. Self-Check
+### 13. Self-Check
 
 Before outputting, verify:
 - [ ] A beginner can execute every step without searching for additional info?
@@ -216,10 +265,11 @@ Before outputting, verify:
 - [ ] Resource list includes all mentioned tools/services?
 - [ ] Checklist matches all steps from the full guide?
 - [ ] All tool/service/platform names use official spelling (no transcript garbling)?
+- [ ] For video transcripts: timestamps are present on step headers and speaker examples, links are clickable with correct `?t=` seconds?
 
 If any item fails — fix before outputting.
 
-### 13. Output
+### 14. Output
 
 Output the full guide to the chat using this structure:
 
