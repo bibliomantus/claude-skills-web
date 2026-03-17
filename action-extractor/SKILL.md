@@ -2,11 +2,11 @@
 name: action-extractor-web
 description: >
   Analyze any text material (video transcript, article, book excerpt, audio transcript,
-  lecture notes) and create an exhaustive step-by-step practical guide for implementing
-  the skills and ideas described in it. Use when the user says "разбери материал",
+  lecture notes, Telegram chat export) and create an exhaustive step-by-step practical guide,
+  structured ideas document, or mixed analysis. Use when the user says "разбери материал",
   "проанализируй", "составь пошаговый план", "составь руководство", "сделай разбор",
   "извлеки шаги", "extract actionable steps", "break down this text", "turn into a guide",
-  or pastes a transcript/article text and asks to turn it into actionable steps.
+  or pastes a transcript/article text and asks to turn it into actionable steps or analyze it.
   Do NOT use for simple summarization, translation, retelling, book reviews,
   or content creation unrelated to extracting actionable steps from existing material.
 ---
@@ -61,14 +61,28 @@ Output in Russian:
 - [idea 1]
 - [idea 2]
 
-Прорабатывать материал полностью?
+**Частей материала:** [1 / or "часть N из M, найдены ссылки на другие части"]
 ```
 
-Wait for the user's response:
-- If yes → proceed to step 2
-- If no → stop
-- If only ideas requested → provide ideas list and stop
-- If material is purely theory with no actionable steps → say so honestly, provide ideas list, ask if user still wants a guide (it would be thin)
+Wait for the user's response. Route by content type:
+
+**If "Практические рекомендации" checked** → `document_type = guide`
+**If "Идеи и концепции" checked** → `document_type = ideas-only`
+**If both checked or "Смешанный"** → ask:
+> "Материал смешанный — есть и практические шаги, и идеи. Что создать?
+> 1. Полное руководство с шагами + идеями
+> 2. Только идеи и примеры"
+- **1** → `document_type = mixed`
+- **2** → `document_type = ideas-only`
+
+Then ask mode choice:
+- **"Прорабатывать полностью или быстрый разбор (без ловушек новичка и адаптации)?"**
+  - **Полностью** → `mode = full`, proceed
+  - **Быстрый** → `mode = quick`, proceed
+  - **Нет** → stop
+  - **Только список идей** → output ideas from preview and stop
+
+For ideas-only, notify: "Материал содержит идеи и концепции — создам документ идей."
 
 ### 2. Detect Multi-Part Content
 
@@ -81,12 +95,19 @@ If detected:
 
 ### 3. Analyze and Extract
 
-Read the entire material carefully. Identify:
+Read the entire material carefully. Depending on `document_type`:
+
+**For guide and mixed** — extract:
 - **Concrete actions** the reader can perform
 - **Skills and techniques** described or referenced
 - **Tools, platforms, software** mentioned
-- **Prerequisites** — knowledge, skills, or tools mentioned but NOT explained in the material
+- **Prerequisites** — knowledge, skills, or tools mentioned but NOT explained
 - **Irrelevant sections** — digressions, ads, self-promotion, filler — skip silently
+
+**For mixed and ideas-only** — also extract:
+- **Business ideas and monetization opportunities** — what it is, mechanics, target audience, entry barrier, potential
+- **Concepts and frameworks** — named models, principles, ways of thinking; explain in plain language with concrete application
+- **Insights** — non-obvious observations, counterintuitive points, surprising facts
 
 #### Fix garbled names from transcripts
 
@@ -114,6 +135,8 @@ Order all steps by how quickly they produce a tangible result:
 1. **Quick wins** — results in minutes/hours
 2. **Core skills** — more time, but form the competency foundation
 3. **Advanced level** — long-term deepening of expertise
+
+Aim for 8–15 steps total. Too many = poor grouping. Too few = lost details.
 
 ### 6. Extract Timestamps (video transcripts only)
 
@@ -170,7 +193,7 @@ Every step must contain exactly three parts:
 
 1. **Action** — imperative command: "Do X to get Y"
 2. **How to execute** — specific substeps, detailed enough for someone unfamiliar with the topic to complete without questions
-3. **Completion criterion** — a specific example, number, or fact confirming the step is done
+3. **Completion criterion** — "Готово, когда: [specific result]"
 
 ### 8. Apply Rules
 
@@ -183,7 +206,7 @@ Every step must contain exactly three parts:
 - Do NOT start with an overview or explanation of why this skill matters
 - **Prompts must stay in their original language.** When the source material contains prompts or instructions for AI tools (ChatGPT, Midjourney, Kling, etc.), keep them in the original language (usually English). Add a Russian translation in parentheses or on the next line, but the working prompt must remain in the original — translating it would break its functionality
 
-### 9. Beginner Traps
+### 9. Beginner Traps (skip in quick mode)
 
 Go through the steps again and find where a beginner will likely get stuck:
 - Warnings the author mentions in passing
@@ -199,7 +222,7 @@ Format:
 
 Only include traps that follow from the material. Do not invent unrelated problems.
 
-### 10. Context Adaptation
+### 10. Context Adaptation (skip in quick mode)
 
 If the material is tied to a specific context (company size, industry, budget), add:
 
@@ -218,7 +241,41 @@ If the material is tied to a specific context (company size, industry, budget), 
 
 Only include contexts that make sense. 2-4 bullets per context.
 
-### 11. Resource List
+### 11. Ideas & Concepts Section (for mixed and ideas-only documents)
+
+Skip this step if `document_type = guide`.
+
+Write the ideas section based on extracted data:
+
+**Business ideas** — each gets its own block:
+```
+### 💡 [Название идеи]
+**Суть:** [1–2 предложения]
+**Механика:** [как работает на практике]
+**Для кого:** [целевая аудитория]
+**Порог входа:** [что нужно для старта]
+**Потенциал:** [оценка из материала]
+
+> 🗣️ **Спикер** [⏱ MM:SS](link): [цитата или контекст]
+```
+
+**Concepts and frameworks** — each gets its own block:
+```
+### [Название концепции]
+**Суть:** [объяснение своими словами]
+**Как применить:** [конкретное применение]
+
+> 🗣️ **Спикер** [⏱ MM:SS](link): [пример из материала]
+```
+
+**Insights** — flat bullet list:
+```
+- [⏱ MM:SS](link) **[Тема]:** [нестандартная мысль или неочевидный вывод]
+```
+
+If a field wasn't found in the material — skip it silently, do not write "не указано".
+
+### 12. Resource List
 
 Collect ALL tools, services, platforms, books, channels from the material:
 
@@ -232,7 +289,7 @@ Collect ALL tools, services, platforms, books, channels from the material:
 
 Do NOT add resources not mentioned in the material.
 
-### 12. Compact Checklist
+### 13. Compact Checklist
 
 Add a 1-page checklist version at the end:
 
@@ -252,46 +309,71 @@ Add a 1-page checklist version at the end:
 ...
 ```
 
-Rules: each step = 1 line, max 10-15 words, no substeps, same order as full guide.
+Rules: each step = 1 line, max 10-15 words, no substeps, same order as full guide. Ideas are NOT included in the checklist.
 
-### 13. Self-Check
+For ideas-only documents, replace with:
+```
+## Чеклист идей
+- [ ] [идея в 1 строку — действие или решение, max 15 слов]
+```
+
+### 14. Self-Check
 
 Before outputting, verify:
+- [ ] Correct structure used for document type (guide / ideas / mixed)?
 - [ ] A beginner can execute every step without searching for additional info?
-- [ ] Every step has a specific completion criterion?
+- [ ] Every step has a specific completion criterion ("Готово, когда:")?
 - [ ] All terms are explained inline?
 - [ ] No significant detail from the material is lost?
-- [ ] Beginner traps cover real risks from the material?
 - [ ] Resource list includes all mentioned tools/services?
 - [ ] Checklist matches all steps from the full guide?
 - [ ] All tool/service/platform names use official spelling (no transcript garbling)?
 - [ ] For video transcripts: timestamps are present on step headers and speaker examples, links are clickable with correct `?t=` seconds?
+- [ ] If ideas present: ideas section written and positioned correctly?
+
+**Full mode only** (skip in quick mode):
+- [ ] Beginner traps cover real risks from the material?
+- [ ] Context adaptation sections present and relevant?
 
 If any item fails — fix before outputting.
 
-### 14. Output
+### 15. Output
 
-Output the full guide to the chat using this structure:
+Output the full guide to the chat using the appropriate template:
+
+#### Guide Template (`document_type = guide`)
 
 ```markdown
 # Практическое руководство: [тема]
 
+**Тип:** #howto
 **Источник:** [тип: транскрипт / статья / книга / и т.д.]
 **Автор:** [если известен]
+**Канал:** [если YouTube]
 **Ссылка:** [если предоставлена]
+**Дата публикации:** [если известна]
 **Количество шагов:** [число]
 **Время на первый результат:** [оценка]
 
 ---
 
 ## Быстрые результаты (шаги 1-N)
-[steps]
+
+### Темы для предварительного изучения (если применимо)
+- **[Тема]** — [зачем нужна]. Изучить: [конкретный объём]
+
+### Шаг 1: [Действие] [⏱ MM:SS](link)
+**Как выполнить:** [подшаги]
+
+> 💡 **Пример спикера** [⏱ MM:SS](link): [описание]
+
+**Готово, когда:** [критерий]
 
 ## Основные навыки (шаги N-M)
-[steps]
+...
 
 ## Продвинутый уровень (шаги M-K)
-[steps]
+...
 
 ---
 
@@ -301,4 +383,99 @@ Output the full guide to the chat using this structure:
 ## Чеклист для печати
 ```
 
-Always use this Russian structure regardless of the source material's language.
+#### Ideas Template (`document_type = ideas-only`)
+
+```markdown
+# Идеи из материала: [тема]
+
+**Тип:** #ideas
+**Источник:** [тип материала]
+**Автор:** [если известен]
+**Канал:** [если YouTube]
+**Ссылка:** [если предоставлена]
+**Дата публикации:** [если известна]
+
+---
+
+## Бизнес-идеи и монетизация
+
+### 💡 [Название идеи]
+**Суть:** ...
+**Механика:** ...
+**Для кого:** ...
+**Порог входа:** ...
+**Потенциал:** ...
+
+> 🗣️ **Спикер** [⏱ MM:SS](link): [цитата]
+
+---
+
+## Концепции и фреймворки
+
+### [Название]
+**Суть:** ...
+**Как применить:** ...
+
+---
+
+## Инсайты
+
+- [⏱ MM:SS](link) **[Тема]:** [мысль]
+
+---
+
+## Инструменты и ресурсы
+## Чеклист идей
+```
+
+#### Mixed Template (`document_type = mixed`)
+
+```markdown
+# Практическое руководство: [тема]
+
+**Тип:** #ideas #howto
+**Источник:** [тип материала]
+**Автор:** [если известен]
+**Канал:** [если YouTube]
+**Ссылка:** [если предоставлена]
+**Дата публикации:** [если известна]
+**Количество шагов:** [число]
+**Время на первый результат:** [оценка]
+
+---
+
+[... все разделы из Guide Template — шаги, ловушки, адаптация, ресурсы ...]
+
+---
+
+## 💡 Идеи и концепции из материала
+
+### Бизнес-идеи и монетизация
+
+#### 💡 [Название идеи]
+**Суть:** ...
+**Механика:** ...
+**Для кого:** ...
+**Порог входа:** ...
+
+> 🗣️ **Спикер** [⏱ MM:SS](link): [цитата]
+
+### Концепции и фреймворки
+
+#### [Название]
+**Суть:** ...
+**Как применить:** ...
+
+### Инсайты
+- [⏱ MM:SS](link) **[Тема]:** [мысль]
+
+---
+
+## Чеклист для печати
+
+[чеклист шагов — идеи в чеклист НЕ включать]
+```
+
+**Note:** In mixed documents, the ideas section always goes AFTER all practical content and BEFORE the checklist.
+
+Always use the Russian structure regardless of the source material's language.
